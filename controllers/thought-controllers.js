@@ -6,11 +6,12 @@ const thoughtController = {
     getAllThoughts(req, res) {
         Thought.find({})
         .select('-__v')
-        .them(dbMixmeData => res.json(dbMixmeData)
-        .catch(err => {
-            console.log(err);
-            res.status(400).json(err);
-        }));
+        .then(dbMixmeData => res.json(dbMixmeData)
+        // .catch(err => {
+        //     console.log(err);
+        //     res.status(400).json(err);
+        // })
+        );
     },
 
     //get a thought by id
@@ -52,7 +53,7 @@ const thoughtController = {
 
     //delete a thought
     deleteThought({params}, res) {
-        Thought.findOneAndDelete({_id: params.id})
+        Thought.findOneAndDelete({_id: params.id}, {new: true})
         .then(deleteThought => {
             if (!deleteThought) {
                 res.status(404).json({ message: 'No thought found with this id.'});
@@ -63,20 +64,20 @@ const thoughtController = {
     },
 
     //update thought by pushing a reaction to the array
-    updateReactions({params}, res){
-        Thought.findOneAndUpdate({_id:params.thoughtId}, {push:{reaction: params.reactionId}})
-        .then(updateThoughts => {
-            if(!updateThoughts) {
+    updateReactions({params, body}, res){
+        Thought.findOneAndUpdate({_id:params.thoughtId}, {$push:{reactions: body}},{new:true})
+        .then(updateReactions => {
+            if(!updateReactions) {
                 res.status(404).json({message: 'No thought found with this id'});
             }
-            res.json(updateThoughts);
+            res.json(updateReactions);
         })
         .catch(err => res.status(400).json(err));
     },
 
     //delete a reaction by pulling a reaction from the array
     deleteReaction({params}, res) {
-        Thought.findByIdAndUpdate({_id:params.thoughtId}, {$pull: {reaction: params.reactionId}})
+        Thought.findByIdAndUpdate({_id:params.thoughtId}, {$pull: {reactions: params.reactionId}})
         .then(deleteReaction => {
             if(!deleteReaction) {
                 res.status(404).json({message: 'No thought with this id.'});
